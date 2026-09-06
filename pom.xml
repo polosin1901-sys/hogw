@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ru.hogwarts</groupId>
-	<artifactId>school1</artifactId>
+	<artifactId>school</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>
