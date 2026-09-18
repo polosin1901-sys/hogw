@@ -30,6 +30,10 @@ public class Student {
         this.age = age;
     }
 
+    public void setFaculty(Faculty faculty) {
+        this.faculty = faculty;
+    }
+
     public Student() {
     }
 

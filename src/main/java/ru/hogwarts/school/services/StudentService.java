@@ -25,11 +25,11 @@ public class StudentService {
     }
 
     public Student getStudent(Long id) {
-        return studentRepository.findById(id).get();
+        return studentRepository.findById(id).orElse(null);
     }
 
     public Faculty getStudentsFaculty(Long id) {
-        return studentRepository.findById(id).get().getFaculty();
+        return studentRepository.findById(id).map(Student::getFaculty).orElse(null);
     }
 
     public Student updateStudent(Student student) {

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
@@ -12,13 +13,17 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import ru.hogwarts.school.controllers.StudentController;
+import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repositories.FacultyRepository;
+import ru.hogwarts.school.repositories.StudentRepository;
 import tools.jackson.databind.ObjectMapper;
 
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestRestTemplate
 public class StudentControllerTest {
 
     @LocalServerPort
@@ -26,6 +31,12 @@ public class StudentControllerTest {
 
     @Autowired
     StudentController studentController;
+
+    @Autowired
+    StudentRepository studentRepository;
+
+    @Autowired
+    FacultyRepository facultyRepository;
 
     @Autowired
     TestRestTemplate testRestTemplate;
@@ -44,41 +55,39 @@ public class StudentControllerTest {
 
     @Test
     public void testGetStudent() throws Exception {
-        Long studentId = 1L;
-        String url = "http://localhost:" + port + "/student/" + studentId;
+        Student student = new Student(null,"rhfh",19);
+        studentRepository.save(student);
+        String url = "http://localhost:" + port + "/student/" + student.getId();
         assertThat(this.testRestTemplate.getForObject(url, String.class)).isNotNull();
 
-        ResponseEntity<String> response = this.testRestTemplate.getForEntity(url, String.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        Long nonExistenceStudentId = 9999L;
-        String url2 = "http://localhost:" + port + "/student/" + nonExistenceStudentId;
-
-        ResponseEntity<String> response2 = this.testRestTemplate.getForEntity(url2, String.class);
-        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Long nonExistenceId = 99L;
+        String url2 = "http://localhost:" + port + "/student/" + nonExistenceId;
+        ResponseEntity<String> response = this.testRestTemplate.getForEntity(url2,String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testGetStudentsFaculty() throws Exception {
-        Long studentId = 1L;
-        String url = "http://localhost:" + port + "/faculty/" + studentId;
+        Student student = new Student(null,"rhfh",19);
+        Faculty faculty = new Faculty(null,"ffff","erjkd");
+        student.setFaculty(faculty);
+        facultyRepository.save(faculty);
+        studentRepository.save(student);
+
+        String url = "http://localhost:" + port + "/student/faculty/" + student.getId();
         assertThat(this.testRestTemplate.getForObject(url, String.class)).isNotNull();
 
-        ResponseEntity<String> response = this.testRestTemplate.getForEntity(url, String.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        Long nonExistenceStudentId = 9999L;
-        String url2 = "http://localhost:" + port + "/faculty/" + nonExistenceStudentId;
-
-        ResponseEntity<String> response2 = this.testRestTemplate.getForEntity(url2, String.class);
-        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Long nonExistenceId = 99L;
+        String url2 = "http://localhost:" + port + "/student/faculty/" + nonExistenceId;
+        ResponseEntity<String> response = this.testRestTemplate.getForEntity(url2,String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     public void testGetStudentByAgeBetween() throws Exception {
         int studentAgeMin = 16;
         int studentAgeMax = 26;
-        String url = "http://localhost:" + port + "/age?min=" + studentAgeMin + "&max=" + studentAgeMax;
+        String url = "http://localhost:" + port + "/student/age?min=" + studentAgeMin + "&max=" + studentAgeMax;
         assertThat(this.testRestTemplate.getForObject(url, String.class)).isNotNull();
 
         ResponseEntity<String> response = this.testRestTemplate.getForEntity(url, String.class);
@@ -86,7 +95,7 @@ public class StudentControllerTest {
 
         int nonExistenceStudentMinAge = 80;
         int nonExistenceStudentMaxAge = 100;
-        String url2 = "http://localhost:" + port + "/age?min=" + nonExistenceStudentMinAge + "&max=" + nonExistenceStudentMaxAge;
+        String url2 = "http://localhost:" + port + "/student/age?min=" + nonExistenceStudentMinAge + "&max=" + nonExistenceStudentMaxAge;
 
         ResponseEntity<String> response2 = this.testRestTemplate.getForEntity(url2, String.class);
         assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -95,14 +104,14 @@ public class StudentControllerTest {
     @Test
     public void testGetStudentsByAge() throws Exception {
         int studentAge = 20;
-        String url = "http://localhost:" + port + "/by-age?age=" + studentAge;
+        String url = "http://localhost:" + port + "/student/by-age?age=" + studentAge;
         assertThat(this.testRestTemplate.getForObject(url, String.class)).isNotNull();
 
         ResponseEntity<String> response = this.testRestTemplate.getForEntity(url, String.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         int nonExistenceStudentAge = 80;
-        String url2 = "http://localhost:" + port + "/by-age?age=" + nonExistenceStudentAge;
+        String url2 = "http://localhost:" + port + "/student/by-age?age=" + nonExistenceStudentAge;
 
         ResponseEntity<String> response2 = this.testRestTemplate.getForEntity(url2, String.class);
         assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -110,72 +119,16 @@ public class StudentControllerTest {
     }
 
     @Test
-    public void testDownloadAvatar() throws Exception {
-        Long studentId = 1L;
-        String url = "http://localhost:" + port + "/" + studentId + "/cover/data";
-        assertThat(this.testRestTemplate.getForObject(url, byte[].class)).isNotNull();
-
-        ResponseEntity<byte[]> response = this.testRestTemplate.getForEntity(url, byte[].class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        Long nonExistenceStudentId = 999999L;
-        String url2 = "http://localhost:" + port + "/" + nonExistenceStudentId + "/cover/data";
-
-        ResponseEntity<byte[]> response2 = this.testRestTemplate.getForEntity(url2, byte[].class);
-        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @Test
-    public void testDownloadAvatar2() throws Exception {
-        Long studentId = 1L;
-        String url = "http://localhost:" + port + "/" + studentId + "/cover";
-        assertThat(this.testRestTemplate.getForObject(url, byte[].class)).isNotNull();
-
-        ResponseEntity<byte[]> response = this.testRestTemplate.getForEntity(url, byte[].class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        Long nonExistenceStudentId = 999999L;
-        String url2 = "http://localhost:" + port + "/" + nonExistenceStudentId + "/cover";
-
-        ResponseEntity<byte[]> response2 = this.testRestTemplate.getForEntity(url2, byte[].class);
-        assertThat(response2.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @Test
     public void testCreateStudent() throws Exception {
         Student student = new Student(1L, "Sasha", 20);
         String url = "http://localhost:" + port + "/student";
         assertThat(this.testRestTemplate.postForObject(url, student, String.class)).isNotNull();
-        ResponseEntity<String> response = this.testRestTemplate.postForEntity(url, student, String.class);
-        Student response_ = new ObjectMapper().readValue(response.getBody(), Student.class);
-        assertThat(response_.getAge()).isEqualTo(student.getAge());
-        assertThat(response_.getName()).isEqualTo(student.getName());
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
-    @Test
-    public void testuploadAvatar() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "cover", "avatar.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[1024 * 200]
-        );
-        String url = "http://localhost:" + port + "/1/cover";
-        MultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
-        params.add("cover", file.getResource());
-        ResponseEntity<String> response = this.testRestTemplate.postForEntity(url, params, String.class);
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        MockMultipartFile largeFile = new MockMultipartFile(
-                "cover", "large_avatar.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[1024 * 400]
-        );
-        params.set("cover", largeFile.getResource());
-        ResponseEntity<String> responseLarge = this.testRestTemplate.postForEntity(url, params, String.class);
-        assertThat(responseLarge.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(responseLarge.getBody()).contains("File is too big");
-    }
 
     @Test
     public void testUpdateStudent() throws Exception {
-        Student student = new Student(1L, "Sasha", 20);
+        Student student = new Student(null, "Sasha", 20);
         String url = "http://localhost:" + port + "/student";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

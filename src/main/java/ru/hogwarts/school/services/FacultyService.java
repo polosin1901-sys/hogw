@@ -26,11 +26,11 @@ public class FacultyService {
     }
 
     public Faculty getFaculty(Long id) {
-        return facultyRepository.findById(id).get();
+        return facultyRepository.findById(id).orElse(null);
     }
 
     public Collection<Student> getStudentsOfFaculty(Long id) {
-        return facultyRepository.findById(id).get().getStudents();
+        return facultyRepository.findById(id).orElse(null).getStudents();
     }
 
     public Faculty updateFaculty(Faculty faculty) {

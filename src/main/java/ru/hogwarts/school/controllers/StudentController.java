@@ -58,7 +58,11 @@ public class StudentController {
 
     @GetMapping("/age")
     public ResponseEntity<Collection<Student>> getStudentByAgeBetween(@RequestParam int min, @RequestParam int max) {
-        return ResponseEntity.ok(studentService.getStudentsByAgeBetween(min, max));
+        Collection<Student> students = studentService.getStudentsByAgeBetween(min, max);
+        if (students.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.emptyList());
+        }
+        return ResponseEntity.ok(students);
     }
 
     @GetMapping("/by-age")
@@ -70,7 +74,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/cover/data")
-    public ResponseEntity<byte[]> downloadAvatar (@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadAvatar(@PathVariable Long id) {
         Avatar avatar = avatarService.findAvatar(id);
 
         HttpHeaders headers = new HttpHeaders();
@@ -81,7 +85,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id}/cover")
-    public void downloadAvatar (@PathVariable Long id, HttpServletResponse response) throws IOException {
+    public void downloadAvatar(@PathVariable Long id, HttpServletResponse response) throws IOException {
         Avatar avatar = avatarService.findAvatar(id);
 
         Path path = Path.of(avatar.getFilePath());
@@ -105,7 +109,7 @@ public class StudentController {
         if (cover.getSize() > 1024 * 300) {
             return ResponseEntity.badRequest().body("File is too big");
         }
-       avatarService.uploadAvatar(id, cover);
+        avatarService.uploadAvatar(id, cover);
         return ResponseEntity.ok().build();
     }
 

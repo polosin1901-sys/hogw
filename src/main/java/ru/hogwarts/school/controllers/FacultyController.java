@@ -29,7 +29,7 @@ public class FacultyController {
     public ResponseEntity<Faculty> getFaculty(@PathVariable Long id) {
         Faculty faculty = facultyService.getFaculty(id);
         if (faculty == null) {
-            ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(faculty);
     }
@@ -38,7 +38,7 @@ public class FacultyController {
     public ResponseEntity<Collection<Student>> getStudentsFaculty(@PathVariable Long id) {
         Collection<Student> students = facultyService.getStudentsOfFaculty(id);
         if (students.isEmpty()) {
-            ResponseEntity.notFound().build();
+            return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(students);
     }
@@ -69,7 +69,7 @@ public class FacultyController {
     public ResponseEntity<Faculty> updateFaculty(@RequestBody Faculty faculty) {
         Faculty faculty1 = facultyService.updateFaculty(faculty);
         if (faculty1 == null) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         return ResponseEntity.ok(faculty1);
     }
