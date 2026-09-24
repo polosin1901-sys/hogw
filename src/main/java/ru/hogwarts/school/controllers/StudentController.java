@@ -20,17 +20,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @RestController
 @RequestMapping("/student")
 public class StudentController {
 
     private final StudentService studentService;
-    private final AvatarService avatarService;
 
-    public StudentController(StudentService studentService, AvatarService avatarService) {
+    public StudentController(StudentService studentService) {
         this.studentService = studentService;
-        this.avatarService = avatarService;
     }
 
     @GetMapping
@@ -73,46 +72,25 @@ public class StudentController {
         return ResponseEntity.ok(Collections.emptyList());
     }
 
-    @GetMapping("/{id}/cover/data")
-    public ResponseEntity<byte[]> downloadAvatar(@PathVariable Long id) {
-        Avatar avatar = avatarService.findAvatar(id);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(avatar.getMediaType()));
-        headers.setContentLength(avatar.getData().length);
-
-        return ResponseEntity.status(HttpStatus.OK).headers(headers).body(avatar.getData());
+    @GetMapping("/amount")
+    public Integer getAmountOfStudents() {
+        return studentService.getAmountOfStudents();
     }
 
-    @GetMapping("/{id}/cover")
-    public void downloadAvatar(@PathVariable Long id, HttpServletResponse response) throws IOException {
-        Avatar avatar = avatarService.findAvatar(id);
+    @GetMapping("/average-age-of-students")
+    public Double getAverageAgeOfStudents() {
+        return studentService.getAverageAgeOfStudents();
+    }
 
-        Path path = Path.of(avatar.getFilePath());
-
-        try (
-                InputStream is = Files.newInputStream(path);
-                OutputStream os = response.getOutputStream();) {
-            response.setContentType(avatar.getMediaType());
-            response.setContentLength((int) avatar.getFileSize());
-            is.transferTo(os);
-        }
+    @GetMapping("/last-5-students")
+    public List<Student> getLast5Students() {
+        return studentService.getLast5Students();
     }
 
     @PostMapping
     public Student createStudent(@RequestBody Student student) {
         return studentService.createStudent(student);
     }
-
-    @PostMapping(value = "/{id}/cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadAvatar(@PathVariable Long id, @RequestParam MultipartFile cover) throws IOException {
-        if (cover.getSize() > 1024 * 300) {
-            return ResponseEntity.badRequest().body("File is too big");
-        }
-        avatarService.uploadAvatar(id, cover);
-        return ResponseEntity.ok().build();
-    }
-
 
     @PutMapping
     public ResponseEntity<Student> updateStudent(@RequestBody Student student) {

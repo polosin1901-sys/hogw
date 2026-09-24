@@ -3,6 +3,8 @@ package ru.hogwarts.school.services;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.school.model.Avatar;
@@ -32,6 +34,11 @@ public class AvatarService {
     public AvatarService(StudentService studentService, AvatarRepository avatarRepository) {
         this.studentService = studentService;
         this.avatarRepository = avatarRepository;
+    }
+
+    public Page<Avatar> getAvatarsByPage(Integer pageNumber, Integer pageSize) {
+        PageRequest pageRequest = PageRequest.of(pageNumber, pageSize);
+        return avatarRepository.findAll(pageRequest);
     }
 
     public void uploadAvatar(Long studentId, MultipartFile avatarFile) throws IOException {
