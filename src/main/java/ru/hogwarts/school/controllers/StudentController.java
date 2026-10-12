@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/student")
@@ -85,6 +86,19 @@ public class StudentController {
     @GetMapping("/last-5-students")
     public List<Student> getLast5Students() {
         return studentService.getLast5Students();
+    }
+
+    @GetMapping("/namestartswithA")
+    public List<String> getStudentsWhoNamesStartsWithA() {
+        List<String> students = studentService.getAllStudents().stream().map(student -> student.getName()).map(s -> s.toUpperCase())
+                .filter(s -> s.startsWith("A")).sorted().collect(Collectors.toList());
+        return students;
+    }
+
+    @GetMapping("/averageAgeOfAllStudents")
+    public Double getAverageAgeOfAllStudents() {
+        double averageAge = studentService.getAllStudents().stream().mapToInt(Student::getAge).average().orElse(0);
+        return averageAge;
     }
 
     @PostMapping

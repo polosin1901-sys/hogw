@@ -9,6 +9,8 @@ import ru.hogwarts.school.services.FacultyService;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/faculty")
@@ -59,6 +61,22 @@ public class FacultyController {
         return ResponseEntity.ok(Collections.emptyList());
     }
 
+    @GetMapping("/theLongestFacultyName")
+    public String longestFacultyName() {
+        String longestFacultyName = facultyService.getAllFaculties().stream()
+                .map(Faculty::getName)
+                .max(Comparator.comparingInt(String::length)).orElse(null);
+        return longestFacultyName;
+    }
+
+    @GetMapping("/getCalculationResult")
+    public int getCalculationResult() {
+        int sum = Stream.iterate(1, a -> a + 1)
+                .parallel()
+                .limit(1_000_000)
+                .reduce(0, (a, b) -> a + b);
+        return sum;
+    }
 
     @PostMapping
     public Faculty createFaculty(@RequestBody Faculty faculty) {
