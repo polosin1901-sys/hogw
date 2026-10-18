@@ -101,6 +101,16 @@ public class StudentController {
         return averageAge;
     }
 
+    @GetMapping("/print-parallel")
+    public void nameOfStudentsByParallelTread() {
+        studentService.getNameOfStudentsByParallelTread();
+    }
+
+    @GetMapping("/print-synchronized")
+    public void getNameOfStudentsByParallelSynchronizedTread() {
+        studentService.getNameOfStudentsByParallelSynchronizedTread();
+    }
+
     @PostMapping
     public Student createStudent(@RequestBody Student student) {
         return studentService.createStudent(student);
